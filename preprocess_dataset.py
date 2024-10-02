@@ -19,12 +19,13 @@ def load_mv_ucr_data(dataset_name, parent_file):
     ds_channel_nb = int(dim_df.at[ds_idx, "NumDimensions"])
     ds_seg_size = int(dim_df.at[ds_idx, "SeriesLength"])
     
-    
-    
     #Extract TrainData
     X_train = np.zeros((ds_trn_size, 1, ds_seg_size, ds_channel_nb))
     for ch in range(ds_channel_nb):
-        data_file = parent_file+"/"+dataset_name+"Dimension"+str(ch+1)+"_TRAIN.arff"
+        if ds_channel_nb >1:
+            data_file = parent_file+"/"+dataset_name+"Dimension"+str(ch+1)+"_TRAIN.arff"
+        else:
+            data_file = parent_file+"/"+dataset_name+"_TRAIN.arff"
         data, meta = arff.loadarff(data_file)
         train_data = data[meta.names()[:-1]] #everything but the last column
         train_data = np.array(train_data.tolist())
@@ -41,7 +42,10 @@ def load_mv_ucr_data(dataset_name, parent_file):
     #Extract TestData
     X_test = np.zeros((ds_tst_size, 1, ds_seg_size, ds_channel_nb))
     for ch in range(ds_channel_nb):
-        data_file = parent_file+"/"+dataset_name+"Dimension"+str(ch+1)+"_TEST.arff"
+        if ds_channel_nb >1:
+            data_file = parent_file+"/"+dataset_name+"Dimension"+str(ch+1)+"_TEST.arff"
+        else:
+            data_file = parent_file+"/"+dataset_name+"_TEST.arff"
         data, meta = arff.loadarff(data_file)
         test_data = data[meta.names()[:-1]] #everything but the last column
         test_data = np.array(test_data.tolist())

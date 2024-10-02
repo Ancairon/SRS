@@ -1,5 +1,6 @@
 Problem,TrainSize,TestSize,NumDimensions,SeriesLength,NumClasses
 ArticularyWordRecognition,275,300,9,144,25
+AbnormalHeartbeat,303,303,1,3053,5
 AtrialFibrillation,15,15,2,640,3
 BasicMotions,40,40,6,100,4
 Cricket,108,72,6,1197,12
