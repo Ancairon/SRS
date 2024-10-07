@@ -43,11 +43,12 @@ class Normalize(layers.Layer):
     def __init__(self, mn=[0], mx=[1], channel_nb=1):
         super(Normalize, self).__init__()
         # mn_init = tf.random_normal_initializer()
-        self.mn = tf.reshape(tf.Variable(initial_value=mn, dtype="float64", trainable=False), shape=(1, channel_nb))
+        self.mn = tf.reshape(tf.Variable(initial_value=mn, dtype="float32", trainable=False), shape=(1, channel_nb))
         # mx_init = tf.random_normal_initializer()
-        self.mx = tf.reshape(tf.Variable(initial_value=mx, dtype="float64", trainable=False), shape=(1, channel_nb))
+        self.mx = tf.reshape(tf.Variable(initial_value=mx, dtype="float32", trainable=False), shape=(1, channel_nb))
     
     def call(self, inputs):
+        print(type(inputs), self.mn, inputs)
         num = tf.subtract(inputs, self.mn)
         denum = tf.subtract(self.mx, self.mn)
         return tf.divide(num, denum)
@@ -56,9 +57,9 @@ class Denormalize(layers.Layer):
     def __init__(self, mn=[0], mx=[1], channel_nb=1):
         super(Denormalize, self).__init__()
         # mn_init = tf.random_normal_initializer()
-        self.mn = tf.reshape(tf.Variable(initial_value=mn, dtype="float64", trainable=False), shape=(1, channel_nb))
+        self.mn = tf.reshape(tf.Variable(initial_value=mn, dtype="float32", trainable=False), shape=(1, channel_nb))
         # mx_init = tf.random_normal_initializer()
-        self.mx = tf.reshape(tf.Variable(initial_value=mx, dtype="float64", trainable=False), shape=(1, channel_nb))
+        self.mx = tf.reshape(tf.Variable(initial_value=mx, dtype="float32", trainable=False), shape=(1, channel_nb))
     
     def call(self, inputs):
         el1 = tf.subtract(self.mx, self.mn)
