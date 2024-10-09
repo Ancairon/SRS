@@ -4,6 +4,7 @@ import tensorflow as tf
 from tensorflow import keras
 from tensorflow.keras import layers
 from tensorflow.keras.layers import concatenate as concat
+from tqdm import tqdm
       
 def normalize(x, mn, mx):
     return (x-mn)/(mx-mn)
