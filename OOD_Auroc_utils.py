@@ -15,6 +15,7 @@ def best_f1(recall, precision):  # highest f1 score
     # f1 metric measures the balance between precision and recall.
     assert len(precision) == len(recall)
     best_f1 = -np.inf
+
     for R, P in zip(recall, precision):
         if not np.any(np.isnan([P, R])):
             f1 = (2*P*R)/(P+R)
@@ -24,7 +25,26 @@ def best_f1(recall, precision):  # highest f1 score
         return 1
     else:
         return best_f1
+    
+def best_f1_p_r(recall, precision):
+    # f1 metric measures the balance between precision and recall.
+    assert len(precision) == len(recall)
+    best_f1 = -np.inf
+    best_P = None
+    best_R = None
 
+    for R, P in zip(recall, precision):
+        if not np.any(np.isnan([P, R])):
+            f1 = (2 * P * R) / (P + R)
+            if f1 > best_f1:
+                best_f1 = f1
+                best_P = P
+                best_R = R
+
+    if best_f1 == -np.inf:
+        return 1, None, None  # Return default values if no valid F1 was found
+    else:
+        return best_f1, best_P, best_R
 
 def ratio_accuracy(ratio_ref, ratio, mode='out_data', method='var', var_factor=2):
     if not np.all(np.isfinite(ratio)):
@@ -148,5 +168,5 @@ def f1(ratio_ref, ratio_elements, ratio_labels, th_range=[0, 15], th_step=0.5):
         P, R = precision_recall(ratio_ref, ratio_elements, ratio_labels, th)
         precision.append(P)
         recall.append(R)
-    f1_value = best_f1(recall, precision)
-    return f1_value
+    f1_value, p, r = best_f1_p_r(recall, precision)
+    return f1_value, p, r

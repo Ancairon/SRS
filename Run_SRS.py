@@ -195,6 +195,16 @@ def main(argv):
     ratio_elements, ratio_labels = au.label_ratio(ratio_dict_real)
     real_auroc_ratio ="%.2f"%au.auroc(ratio_in, ratio_elements, ratio_labels)
     print("AUROC score: ", real_auroc_ratio)
+
+    f1, p ,r = au.f1(ratio_in, ratio_elements, ratio_labels)
+
+    print("F1 score:", f1)
+
+
+
+    print("Precision: ", p)
+    print("Recall: ", r)
+
         
 if __name__=="__main__":
    flags.DEFINE_string('dataset_name', 'Cricket', 'Dataset name')
