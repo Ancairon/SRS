@@ -155,6 +155,14 @@ def main(argv):
     #Data Reading
     ood_X_train, ood_y_train_int, ood_X_test, ood_y_test_int = pkl.load(open(path, 'rb'))
     #adjust OOD data to IN data
+    print(path)
+    if "audio_classification" in path \
+        or "object_detection" in path:
+        print("Adjusting shape")
+        ood_X_train = np.expand_dims(ood_X_train, axis=1)  # Adding a dimension after samples
+        ood_X_test = np.expand_dims(ood_X_test, axis=1)  # Adding a dimension after samples
+        
+
     ood_X_train = adjust_seg_size(ood_X_train, (SEG_SIZE, CHANNEL_NB))       
     ood_X_test = adjust_seg_size(ood_X_test, (SEG_SIZE, CHANNEL_NB)) 
     ood_y_train_int = adjust_labels(ood_y_train_int, CLASS_NB)

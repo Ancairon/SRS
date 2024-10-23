@@ -86,16 +86,21 @@ def load_mv_ucr_data_csv(parent_file, dataset_name, test_size=0.2):
 
     for csv_file in csv_files:
         data = pd.read_csv(csv_file)
-        # data = data.fillna(0)
-        last_column_data = data.iloc[:, -1].values  # Select the last column
+        # Ensure that each CSV has 3600 rows as expected
+        if data.shape[0] != ds_seg_size:
+            raise ValueError(f"CSV {csv_file} does not have 3600 rows, found {data.shape[0]} rows instead.")
+        
+        # Extract only the last column from each CSV
+        last_column_data = data.iloc[:, -1].values
         all_data.append(last_column_data)
 
     # Stack data as separate columns (dimensions)
     X = np.column_stack(all_data)
 
     # Check if the data is 2D (samples, dimensions), reshape if needed
+    # Note that X.shape[1] will be the number of dimensions (CSV files)
     if len(X.shape) == 2:
-        X = X.reshape((X.shape[0], 1, X.shape[1]))
+        X = X.reshape((X.shape[0], 1, X.shape[1]))  # Shape to (samples, 1, dimensions)
 
     # The number of samples is the number of rows in the dataset (each row is a time point)
     n_samples = X.shape[0]

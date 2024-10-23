@@ -24,3 +24,4 @@ SelfRegulationSCP2,200,180,7,1152,2
 StandWalkJump,12,15,4,2500,3
 UWaveGestureLibrary,120,320,3,315,8
 audio_classification,2880,720,11,3600,1
+object_detection,2880,720,11,3600,1

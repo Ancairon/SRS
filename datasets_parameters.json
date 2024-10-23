@@ -28,5 +28,11 @@
     "SEG_SIZE": 1,
     "CHANNEL_NB": 11,
     "CLASS_NB": 1
+  },
+  "object_detection": {
+    "path": "Dataset/object_detection.pkl",
+    "SEG_SIZE": 1,
+    "CHANNEL_NB": 11,
+    "CLASS_NB": 1
   }
 }
