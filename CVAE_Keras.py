@@ -49,7 +49,7 @@ class Normalize(layers.Layer):
         self.mx = tf.reshape(tf.Variable(initial_value=mx, dtype="float32", trainable=False), shape=(1, channel_nb))
     
     def call(self, inputs):
-        print(type(inputs), self.mn, inputs)
+        # print(type(inputs), self.mn, inputs)
         num = tf.subtract(inputs, self.mn)
         denum = tf.subtract(self.mx, self.mn)
         return tf.divide(num, denum)
@@ -129,13 +129,13 @@ class CVAE_model():
             label_layer = keras.Input(shape=(self.class_nb,))
             encoder_inputs = concat([normalized_X, label_layer])
             x = layers.Dense(500, activation="relu", name='enc_dense1')(encoder_inputs)
-            print(X_layer.shape, normalized_X.shape)
+            # print(X_layer.shape, normalized_X.shape)
             x = layers.Dense(250, activation="relu", name='enc_dense2')(x)
             z_mean = layers.Dense(latent_dim, name="z_mean")(x)
             z_log_var = layers.Dense(latent_dim, name="z_log_var")(x)
             z = Sampling()([z_mean, z_log_var])
             z_conditional = concat([z, label_layer])
-            print(X_layer.shape, normalized_X.shape)
+            # print(X_layer.shape, normalized_X.shape)
             self.encoder = keras.Model([X_layer, label_layer], [normalized_X, z_mean, z_log_var, z_conditional], name="encoder")
             #Decoder
             latent_inputs = keras.Input(shape=(latent_dim+self.class_nb,))

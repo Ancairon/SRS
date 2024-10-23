@@ -3,7 +3,7 @@ import pandas as pd
 import requests
 
 
-def getDataFromAPI(whom, ip, chart, dimension, timeStepsBack= 14 * 24 * 60 * 60):
+def getDataFromAPI(whom, ip, chart, dimension, timeStepsBack= 100 * 60):
     points = timeStepsBack
 
     r = requests.get(
@@ -21,22 +21,22 @@ def getDataFromAPI(whom, ip, chart, dimension, timeStepsBack= 14 * 24 * 60 * 60)
     pdObj.to_csv("{0}.csv".format(whom + "_" + chart + "_" + dimension))
 
 
-getDataFromAPI("ran", "localhost", "system.cpu", "user")
-getDataFromAPI("ran", "localhost", "system.cpu", "user")
-getDataFromAPI("ran", "localhost", "system.cpu_some_pressure_stall_time", "time")
-getDataFromAPI("ran", "localhost", "system.load", "load1")
-getDataFromAPI("ran", "localhost", "system.load", "load5")
-getDataFromAPI("ran", "localhost", "system.load", "load15")
-getDataFromAPI("ran", "localhost", "system.ram", "free")
-getDataFromAPI("ran", "localhost", "system.ram", "used")
-getDataFromAPI("ran", "localhost", "system.ram", "cached")
-getDataFromAPI("ran", "localhost", "system.ram", "buffers")
-getDataFromAPI("ran", "localhost", "system.processes", "running")
-getDataFromAPI("ran", "localhost", "system.active_processes", "active")
-getDataFromAPI("ran", "localhost", "system.file_nr_used", "used")
-getDataFromAPI("ran", "localhost", "mem.thp", "anonymous")
-getDataFromAPI("ran", "localhost", "ip.sockstat_sockets", "used")
-getDataFromAPI("ran", "localhost", "mem.committed", "Committed_AS")
+getDataFromAPI("audio_classification", "192.168.1.5", "system.cpu", "user")
+getDataFromAPI("audio_classification", "192.168.1.5", "system.cpu", "user")
+getDataFromAPI("audio_classification", "192.168.1.5", "system.cpu_some_pressure_stall_time", "time")
+getDataFromAPI("audio_classification", "192.168.1.5", "system.load", "load1")
+getDataFromAPI("audio_classification", "192.168.1.5", "system.load", "load5")
+getDataFromAPI("audio_classification", "192.168.1.5", "system.load", "load15")
+getDataFromAPI("audio_classification", "192.168.1.5", "system.ram", "free")
+getDataFromAPI("audio_classification", "192.168.1.5", "system.ram", "used")
+getDataFromAPI("audio_classification", "192.168.1.5", "system.ram", "cached")
+getDataFromAPI("audio_classification", "192.168.1.5", "system.ram", "buffers")
+getDataFromAPI("audio_classification", "192.168.1.5", "system.processes", "running")
+getDataFromAPI("audio_classification", "192.168.1.5", "system.active_processes", "active")
+getDataFromAPI("audio_classification", "192.168.1.5", "system.file_nr_used", "used")
+getDataFromAPI("audio_classification", "192.168.1.5", "mem.thp", "anonymous")
+getDataFromAPI("audio_classification", "192.168.1.5", "ip.sockstat_sockets", "used")
+getDataFromAPI("audio_classification", "192.168.1.5", "mem.committed", "Committed_AS")
 
 ###
 
