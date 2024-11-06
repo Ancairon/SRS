@@ -157,7 +157,9 @@ def main(argv):
     #adjust OOD data to IN data
     print(path)
     if "audio_classification" in path \
-        or "object_detection" in path:
+        or "object_detection" in path \
+        or "face_detection" in path \
+        or "face_landmarking" in path:
         print("Adjusting shape")
         ood_X_train = np.expand_dims(ood_X_train, axis=1)  # Adding a dimension after samples
         ood_X_test = np.expand_dims(ood_X_test, axis=1)  # Adding a dimension after samples
