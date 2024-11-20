@@ -27,3 +27,6 @@ audio_classification,2880,720,9,3600,1
 object_detection,2880,720,9,3600,1
 face_detection,2880,720,9,3600,1
 face_landmarking,2880,720,9,3600,1
+no_ml,2880,720,9,3600,1
+gesture_recognition,2880,720,9,3600,1
+gesture_recognition2,2880,720,9,3600,1

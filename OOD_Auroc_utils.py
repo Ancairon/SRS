@@ -25,7 +25,8 @@ def best_f1(recall, precision):  # highest f1 score
         return 1
     else:
         return best_f1
-    
+
+
 def best_f1_p_r(recall, precision):
     # f1 metric measures the balance between precision and recall.
     assert len(precision) == len(recall)
@@ -45,6 +46,7 @@ def best_f1_p_r(recall, precision):
         return 1, None, None  # Return default values if no valid F1 was found
     else:
         return best_f1, best_P, best_R
+
 
 def ratio_accuracy(ratio_ref, ratio, mode='out_data', method='var', var_factor=2):
     if not np.all(np.isfinite(ratio)):
@@ -126,8 +128,13 @@ def precision_recall(ratio_ref, ratio_elements, ratio_labels, th):
     tn, fp, fn, tp = cm(ratio_labels, predicted_ood).ravel()
     # if tp==0:
     #     return 0, 0
-    P = tp / (tp+fp)
-    R = tp / (tp+fn)
+    print("PRECISION RECALL FUNC, ",tp,fp,fn,tp)
+    if tp == 0:
+        P = 0
+        R = 0
+    else:
+        P = tp / (tp+fp)
+        R = tp / (tp+fn)
     return P, R
 
 
