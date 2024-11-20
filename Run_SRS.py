@@ -209,7 +209,7 @@ def main(argv):
     real_auroc_ratio ="%.2f"%au.auroc(ratio_in, ratio_elements, ratio_labels)
     print("AUROC score: ", real_auroc_ratio)
 
-    f1, p ,r = au.f1(ratio_in, ratio_elements, ratio_labels)
+    f1, p ,r, tp,tn,fp,fn = au.f1(ratio_in, ratio_elements, ratio_labels)
 
     print("F1 score:", f1)
 
@@ -217,6 +217,7 @@ def main(argv):
 
     print("Precision: ", p)
     print("Recall: ", r)
+    print(f"tp,tn,fp,fn\n",tp,tn,fp,fn)
 
         
 if __name__=="__main__":

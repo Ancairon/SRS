@@ -27,25 +27,35 @@ def best_f1(recall, precision):  # highest f1 score
         return best_f1
 
 
-def best_f1_p_r(recall, precision):
+def best_f1_p_r(recall, precision, tp_arr, tn_arr, fp_arr, fn_arr):
     # f1 metric measures the balance between precision and recall.
     assert len(precision) == len(recall)
     best_f1 = -np.inf
     best_P = None
     best_R = None
+    best_tn = None
+    best_tp = None
+    best_fn = None
+    best_fp = None
 
-    for R, P in zip(recall, precision):
-        if not np.any(np.isnan([P, R])):
+    for R, P, tp, tn, fp, fn in zip(recall, precision, tp_arr, tn_arr, fp_arr, fn_arr):
+        null_case_metrics = [tp, tn, fp, fn]
+        if not np.any(np.isnan([P, R])) and P != 0 and R != 0:
             f1 = (2 * P * R) / (P + R)
             if f1 > best_f1:
                 best_f1 = f1
                 best_P = P
                 best_R = R
+                best_tn = tn
+                best_tp = tp
+                best_fn = fn
+                best_fp = fp
 
     if best_f1 == -np.inf:
-        return 1, None, None  # Return default values if no valid F1 was found
+        # Return default values if no valid F1 was found
+        return None, None, None, null_case_metrics[0], null_case_metrics[1], null_case_metrics[2], null_case_metrics[3]
     else:
-        return best_f1, best_P, best_R
+        return best_f1, best_P, best_R, best_tp, best_tn, best_fp, best_fn
 
 
 def ratio_accuracy(ratio_ref, ratio, mode='out_data', method='var', var_factor=2):
@@ -128,14 +138,14 @@ def precision_recall(ratio_ref, ratio_elements, ratio_labels, th):
     tn, fp, fn, tp = cm(ratio_labels, predicted_ood).ravel()
     # if tp==0:
     #     return 0, 0
-    print("PRECISION RECALL FUNC, ",tp,fp,fn,tp)
+    # print("PRECISION RECALL FUNC, ",tp,fp,fn,tp)
     if tp == 0:
         P = 0
         R = 0
     else:
         P = tp / (tp+fp)
         R = tp / (tp+fn)
-    return P, R
+    return P, R, tp, tn, fp, fn
 
 
 def get_best_th(ratio_ref, ratio_elements, ratio_labels, th_range=[0, 15], th_step=0.5):
@@ -171,9 +181,20 @@ def auroc(ratio_ref, ratio_elements, ratio_labels, th_range=[0, 15], th_step=0.5
 def f1(ratio_ref, ratio_elements, ratio_labels, th_range=[0, 15], th_step=0.5):
     precision = []
     recall = []
+    tp_arr = []
+    tn_arr = []
+    fp_arr = []
+    fn_arr = []
+
     for th in np.arange(th_range[0], th_range[1], th_step):
-        P, R = precision_recall(ratio_ref, ratio_elements, ratio_labels, th)
+        P, R, tp, tn, fp, fn = precision_recall(
+            ratio_ref, ratio_elements, ratio_labels, th)
         precision.append(P)
         recall.append(R)
-    f1_value, p, r = best_f1_p_r(recall, precision)
-    return f1_value, p, r
+        tp_arr.append(tp)
+        tn_arr.append(tn)
+        fp_arr.append(fp)
+        fn_arr.append(fn)
+    f1_value, p, r, tp, tn, fp, fn = best_f1_p_r(
+        recall, precision, tp_arr, tn_arr, fp_arr, fn_arr)
+    return f1_value, p, r, tp, tn, fp, fn
