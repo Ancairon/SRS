@@ -64,5 +64,23 @@
     "SEG_SIZE": 1,
     "CHANNEL_NB": 9,
     "CLASS_NB": 1
+  },
+  "hand_landmarker": {
+    "path": "Dataset/hand_landmarker.pkl",
+    "SEG_SIZE": 1,
+    "CHANNEL_NB": 9,
+    "CLASS_NB": 1
+  },
+  "hand_landmarking": {
+    "path": "Dataset/hand_landmarking.pkl",
+    "SEG_SIZE": 1,
+    "CHANNEL_NB": 9,
+    "CLASS_NB": 1
+  },
+  "pose_landmarking": {
+    "path": "Dataset/pose_landmarking.pkl",
+    "SEG_SIZE": 1,
+    "CHANNEL_NB": 9,
+    "CLASS_NB": 1
   }
 }

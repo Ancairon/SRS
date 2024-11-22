@@ -162,6 +162,8 @@ def main(argv):
         or "no_ml" in path \
         or "gesture_recognition" in path \
         or "gesture_recognition" in path \
+        or "hand_landmarking" in path \
+        or "pose_landmarking" in path \
         or "face_landmarking" in path:
         print("Adjusting shape")
         ood_X_train = np.expand_dims(ood_X_train, axis=1)  # Adding a dimension after samples
