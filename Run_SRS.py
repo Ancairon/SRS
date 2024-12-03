@@ -157,12 +157,15 @@ def main(argv):
     #adjust OOD data to IN data
     print(path)
     if "audio_classification" in path \
+        or "audio_classification_rpi" in path \
         or "object_detection" in path \
+        or "object_detection_rpi" in path \
         or "face_detection" in path \
         or "no_ml" in path \
         or "gesture_recognition" in path \
-        or "gesture_recognition" in path \
+        or "gesture_recognition_rpi" in path \
         or "hand_landmarking" in path \
+        or "hand_landmarking_rpi" in path \
         or "pose_landmarking" in path \
         or "face_landmarking" in path:
         print("Adjusting shape")

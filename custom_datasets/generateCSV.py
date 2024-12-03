@@ -3,7 +3,7 @@ import pandas as pd
 import requests
 
 
-def getDataFromAPI(whom, ip, chart, dimension, timeStepsBack= 60 * 60):
+def getDataFromAPI(whom, ip, chart, dimension, timeStepsBack=60 * 60):
     points = timeStepsBack
 
     r = requests.get(
@@ -21,28 +21,16 @@ def getDataFromAPI(whom, ip, chart, dimension, timeStepsBack= 60 * 60):
     pdObj.to_csv("{0}.csv".format(whom + "_" + chart + "_" + dimension))
 
 
-getDataFromAPI("pose_landmarking", "192.168.1.5", "system.cpu", "user")
-getDataFromAPI("pose_landmarking", "192.168.1.5", "system.cpu", "user")
-# getDataFromAPI("pose_landmarking", "192.168.1.5", "system.cpu_some_pressure_stall_time", "time")
-# getDataFromAPI("pose_landmarking", "192.168.1.5", "system.load", "load1")
-# getDataFromAPI("pose_landmarking", "192.168.1.5", "system.load", "load5")
-# getDataFromAPI("pose_landmarking", "192.168.1.5", "system.load", "load15")
-getDataFromAPI("pose_landmarking", "192.168.1.5", "system.ram", "free")
-getDataFromAPI("pose_landmarking", "192.168.1.5", "system.ram", "used")
-getDataFromAPI("pose_landmarking", "192.168.1.5", "system.ram", "cached")
-getDataFromAPI("pose_landmarking", "192.168.1.5", "system.ram", "buffers")
-getDataFromAPI("pose_landmarking", "192.168.1.5", "system.processes", "running")
-getDataFromAPI("pose_landmarking", "192.168.1.5", "system.active_processes", "active")
-getDataFromAPI("pose_landmarking", "192.168.1.5", "system.file_nr_used", "used")
-# getDataFromAPI("pose_landmarking", "192.168.1.5", "mem.thp", "anonymous")
-# getDataFromAPI("pose_landmarking", "192.168.1.5", "ip.sockstat_sockets", "used")
-getDataFromAPI("pose_landmarking", "192.168.1.5", "mem.committed", "Committed_AS")
+name = "face_detection_rpi"
+ip = "192.168.1.27"
 
-###
-
-# getDataFromAPI("server", "192.168.1.60", "system.cpu", "user")
-# getDataFromAPI("server", "192.168.1.60", "net.eth0", "received")
-# getDataFromAPI("server", "192.168.1.60", "net.eth0", "sent")
-
-# getDataFromAPI("server", "192.168.1.60", "mysql_local.queries", "queries")
-# getDataFromAPI("server", "192.168.1.60", "mysql_local.net", "out")
+getDataFromAPI(name, ip, "system.cpu", "user")
+getDataFromAPI(name, ip, "system.cpu", "user")
+getDataFromAPI(name, ip, "system.ram", "free")
+getDataFromAPI(name, ip, "system.ram", "used")
+getDataFromAPI(name, ip, "system.ram", "cached")
+getDataFromAPI(name, ip, "system.ram", "buffers")
+getDataFromAPI(name, ip, "system.processes", "running")
+getDataFromAPI(name, ip, "system.active_processes", "active")
+getDataFromAPI(name, ip, "system.file_nr_used", "used")
+getDataFromAPI(name, ip, "mem.committed", "Committed_AS")

@@ -82,5 +82,29 @@
     "SEG_SIZE": 1,
     "CHANNEL_NB": 9,
     "CLASS_NB": 1
+  },
+  "audio_classification_rpi": {
+    "path": "Dataset/audio_classification_rpi.pkl",
+    "SEG_SIZE": 1,
+    "CHANNEL_NB": 9,
+    "CLASS_NB": 1
+  },
+  "object_detection_rpi": {
+    "path": "Dataset/object_detection_rpi.pkl",
+    "SEG_SIZE": 1,
+    "CHANNEL_NB": 9,
+    "CLASS_NB": 1
+  },
+  "gesture_recognition_rpi": {
+    "path": "Dataset/gesture_recognition_rpi.pkl",
+    "SEG_SIZE": 1,
+    "CHANNEL_NB": 9,
+    "CLASS_NB": 1
+  },
+  "hand_landmarking_rpi": {
+    "path": "Dataset/hand_landmarking_rpi.pkl",
+    "SEG_SIZE": 1,
+    "CHANNEL_NB": 9,
+    "CLASS_NB": 1
   }
 }
