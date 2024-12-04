@@ -28,9 +28,12 @@ audio_classification_rpi,2880,720,9,3600,1
 object_detection,2880,720,9,3600,1
 object_detection_rpi,2880,720,9,3600,1
 face_detection,2880,720,9,3600,1
+face_detection_rpi,2880,720,9,3600,1
 face_landmarking,2880,720,9,3600,1
+face_landmarking_rpi,2880,720,9,3600,1
 gesture_recognition,2880,720,9,3600,1
 gesture_recognition_rpi,2880,720,9,3600,1
 hand_landmarking,2880,720,9,3600,1
 hand_landmarking_rpi,2880,720,9,3600,1
 pose_landmarking,2880,720,9,3600,1
+pose_landmarking_rpi,2880,720,9,3600,1

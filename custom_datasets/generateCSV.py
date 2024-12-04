@@ -21,7 +21,7 @@ def getDataFromAPI(whom, ip, chart, dimension, timeStepsBack=60 * 60):
     pdObj.to_csv("{0}.csv".format(whom + "_" + chart + "_" + dimension))
 
 
-name = "face_detection_rpi"
+name = "pose_landmarking_rpi"
 ip = "192.168.1.27"
 
 getDataFromAPI(name, ip, "system.cpu", "user")

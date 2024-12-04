@@ -106,5 +106,11 @@
     "SEG_SIZE": 1,
     "CHANNEL_NB": 9,
     "CLASS_NB": 1
+  },
+  "pose_landmarking_rpi": {
+    "path": "Dataset/pose_landmarking_rpi.pkl",
+    "SEG_SIZE": 1,
+    "CHANNEL_NB": 9,
+    "CLASS_NB": 1
   }
 }
