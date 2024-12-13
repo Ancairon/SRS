@@ -1,6 +1,7 @@
 from matplotlib.font_manager import json_dump
 import pandas as pd
 import requests
+import os
 
 
 def getDataFromAPI(whom, ip, chart, dimension, timeStepsBack=60 * 60):
@@ -20,11 +21,12 @@ def getDataFromAPI(whom, ip, chart, dimension, timeStepsBack=60 * 60):
     pdObj = pd.read_json("a.json")
     pdObj.to_csv("{0}.csv".format(whom + "_" + chart + "_" + dimension))
 
+    os.remove("a.json")
 
-name = "pose_landmarking_rpi"
+name = "idle2_rpi"
 ip = "192.168.1.27"
 
-getDataFromAPI(name, ip, "system.cpu", "user")
+# getDataFromAPI(name, ip, "system.cpu", "user")
 getDataFromAPI(name, ip, "system.cpu", "user")
 getDataFromAPI(name, ip, "system.ram", "free")
 getDataFromAPI(name, ip, "system.ram", "used")
