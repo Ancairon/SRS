@@ -172,7 +172,7 @@ def main(argv):
     ood_X_train_original, ood_y_train_int_original, ood_X_test_original, ood_y_test_int_original = pkl.load(
         open(path, 'rb'))
     
-    print("OOD LEN",len(ood_X_train_original))
+    print("OOD LEN",len(ood_X_train_original), len(ood_y_train_int_original), len(ood_X_test_original), len(ood_y_test_int_original))
 
     for i in range(0, len(ood_X_train_original), 10):
 
@@ -181,7 +181,7 @@ def main(argv):
         start = time.time()
 
         ood_X_train, ood_y_train_int, ood_X_test, ood_y_test_int = \
-        ood_X_train_original[i:i+10], ood_y_train_int_original[i:i+10], ood_X_test_original[i:i+10], ood_y_test_int_original[i:i+10]
+        ood_X_train_original, ood_y_train_int_original, ood_X_test_original[i:i+10], ood_y_test_int_original[i:i+10]
 
         # adjust OOD data to IN data
         print(path)
@@ -205,8 +205,8 @@ def main(argv):
             # Adding a dimension after samples
             ood_X_test = np.expand_dims(ood_X_test, axis=1)
 
-        ood_X_train = adjust_seg_size(ood_X_train, (SEG_SIZE, CHANNEL_NB))
-        ood_X_test = adjust_seg_size(ood_X_test, (SEG_SIZE, CHANNEL_NB))
+        # ood_X_train = adjust_seg_size(ood_X_train, (SEG_SIZE, CHANNEL_NB))
+        # ood_X_test = adjust_seg_size(ood_X_test, (SEG_SIZE, CHANNEL_NB))
         ood_y_train_int = adjust_labels(ood_y_train_int, CLASS_NB)
         ood_y_test_int = adjust_labels(ood_y_test_int, CLASS_NB)
 

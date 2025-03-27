@@ -4,11 +4,9 @@ import numpy as np
 import pandas as pd
 import json  # Add json import
 from sklearn.model_selection import train_test_split
-from absl import app, flags
 import pickle as pkl
 from scipy.io import arff
 
-FLAGS = flags.FLAGS
 
 def load_mv_ucr_data_csv(parent_file, dataset_name):
     # Extract Data Dimensions
@@ -17,9 +15,11 @@ def load_mv_ucr_data_csv(parent_file, dataset_name):
     ds_trn_size = int(dim_df.at[ds_idx, "TrainSize"])
     ds_channel_nb = int(dim_df.at[ds_idx, "NumDimensions"])
     ds_seg_size = int(dim_df.at[ds_idx, "SeriesLength"])
+    ds_test_size = int(dim_df.at[ds_idx, "TestSize"])
 
     # Find all CSV files with the dataset name as prefix
     csv_files = sorted(glob.glob(os.path.join(parent_file, f"{dataset_name}*.csv")))
+    csv_files = csv_files[:-1]
 
     if len(csv_files) != ds_channel_nb:
         raise ValueError(f"Expected {ds_channel_nb} dimensions, but found {len(csv_files)} CSV files.")
@@ -52,20 +52,19 @@ def load_mv_ucr_data_csv(parent_file, dataset_name):
     y = np.zeros(n_samples, dtype=int)
 
     # Split the data into training and testing sets
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=ds_trn_size, random_state=42)
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=ds_test_size, random_state=42)
 
-    print(X_train[0])
 
     return X_train, y_train, X_test, y_test
 
-def main(argv):
-    dataset_name = FLAGS.dataset_name
-    parent_file = FLAGS.parent_file
+def main(dataset,parent_dir):
+    # dataset = FLAGS.dataset_name
+    # parent_dir = FLAGS.parent_file
 
-    X_train, y_train, X_test, y_test = load_mv_ucr_data_csv(parent_file, dataset_name)
+    X_train, y_train, X_test, y_test = load_mv_ucr_data_csv(parent_dir, dataset)
 
     # Save the dataset to pickle for later use
-    output_file = os.path.join("Dataset", f"{dataset_name}.pkl")
+    output_file = os.path.join("Dataset", f"{dataset}.pkl")
     os.makedirs("Dataset", exist_ok=True)
     with open(output_file, 'wb') as f:
         pkl.dump([X_train, y_train, X_test, y_test], f)
@@ -73,8 +72,8 @@ def main(argv):
     # Save dataset parameters
     with open('datasets_parameters.json', 'r') as jf:
         info = json.load(jf)
-    info[dataset_name] = {
-        "path": f"Dataset/{dataset_name}.pkl",
+    info[dataset] = {
+        "path": f"Dataset/{dataset}.pkl",
         "SEG_SIZE": X_train.shape[1],  # Adjusted to [1] since CSV has different shape
         "CHANNEL_NB": X_train.shape[2],
         "CLASS_NB": len(np.unique(y_train)) if len(np.unique(y_train)) > 1 else 1
@@ -83,7 +82,16 @@ def main(argv):
         json.dump(info, jf, indent=2)
 
 if __name__ == "__main__":
-    flags.DEFINE_string('dataset_name', None, 'Dataset name')
-    flags.DEFINE_string('parent_file', None, 'Parent directory containing the data files')
+    
+    parent_dir = 'custom_datasets'  # Parent directory containing subdirectories for each dataset
 
-    app.run(main)
+    datasets = [os.path.join(parent_dir, d, f"{d}.csv") 
+                for d in os.listdir(parent_dir) 
+                if os.path.isdir(os.path.join(parent_dir, d))]
+    for file in datasets:
+        dataset = file.split("\\")[2].replace(".csv","")
+        parent_dir="./custom_datasets/"+dataset
+        print(dataset, parent_dir)
+
+
+        main(dataset, parent_dir)

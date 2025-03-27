@@ -1,11 +1,12 @@
 import os
-os.environ['TF_CPP_MIN_LOG_LEVEL'] = "3"
-os.environ["CUDA_DEVICE_ORDER"]="PCI_BUS_ID"   
-os.environ["CUDA_VISIBLE_DEVICES"]="0"
 import json
 import STL
+import random
+os.environ["CUDA_VISIBLE_DEVICES"]=""
 
+from itertools import product
 
+import shutil
 import numpy as np
 import tensorflow as tf
 np.random.seed(0)
@@ -13,10 +14,17 @@ tf.random.set_seed(0)
 import pickle as pkl
 import TSDTransform as tsd
 import OOD_Auroc_utils as au
+import pandas as pd
+import time
 
 from CVAE_Keras import CVAE_model
 from utils_ import adjust_seg_size, adjust_labels
 from absl import app, flags
+os.environ['PYTHONHASHSEED'] = '0'
+os.environ['TF_DETERMINISTIC_OPS'] = '1'  # Request deterministic ops in TensorFlow
+random.seed(0)
+np.random.seed(0)
+tf.random.set_seed(0)
 FLAGS = flags.FLAGS
 
 path_dict = {
@@ -51,18 +59,33 @@ def align_set(X_train, y_train_int, input_stl, CLASS_NB, align_iter=5):
     return X_train_aligned, y_train_aligned_int, y_train_aligned
 
 
-def main(argv):
+def main(dataset_name, dataset_name_ood):
     ## Load Data
+
+
+
+
+    align_iter = 5 # Number of iterations for alignment process
+    train_ml = True #True: Train models; False: Load models
+
+    latent_size= 32 # Dimension of the latent space
+    arch='CONV' # Model architecture
+    batch_size = 32 # Batch size
+    epochs = 500 # Epochs
+
     json_param = "datasets_parameters.json"
     with open(json_param) as jf:
         info = json.load(jf)
-        d = info[FLAGS.dataset_name]
+        d = info[dataset_name]
         path = d['path']
         SEG_SIZE = d['SEG_SIZE']
         CHANNEL_NB = d['CHANNEL_NB']
         CLASS_NB = d['CLASS_NB']
-    print("Dataset: {}".format(FLAGS.dataset_name))
+    print("Dataset: {}".format(dataset_name))
     X_train, y_train_int, X_test, y_test_int = pkl.load(open(path, 'rb'))
+
+    print(len(X_test))
+
     #min_train = np.min(np.min(X_train, axis=2), axis=0).flatten()
     #max_train = np.min(np.min(X_train, axis=2), axis=0).flatten()
     min_train = np.min(X_train)
@@ -70,39 +93,47 @@ def main(argv):
     X_train = X_train.reshape((-1, SEG_SIZE, CHANNEL_NB))
     X_test = X_test.reshape((-1, SEG_SIZE, CHANNEL_NB))
     
+    # X_test = X_test[:10]
+    # y_test_int = y_test_int[:10]
+    # exit()
+
     ## STL Data decomp
-    if os.path.isfile(path_dict['stl']+FLAGS.dataset_name+"_STL_decomp.pkl"):    
-        input_stl = pkl.load(open(path_dict['stl']+FLAGS.dataset_name+"_STL_decomp.pkl", 'rb'))
-    else:
-        input_stl = STL.STL_decomp(SEG_SIZE, CHANNEL_NB, X_train, y_train_int)
-        pkl.dump(input_stl, open(path_dict['stl']+FLAGS.dataset_name+"_STL_decomp.pkl", 'wb'))
+    # if os.path.isfile(path_dict['stl']+dataset_name+"_STL_decomp.pkl"):    
+    #     input_stl = pkl.load(open(path_dict['stl']+dataset_name+"_STL_decomp.pkl", 'rb'))
+    # else:
+    input_stl = STL.STL_decomp(SEG_SIZE, CHANNEL_NB, X_train, y_train_int)
+    os.mkdir("./SeasonalRatio")
+    os.mkdir("./SeasonalRatio/STL")
+    pkl.dump(input_stl, open(path_dict['stl']+dataset_name+"_STL_decomp.pkl", 'wb'))
                 
                 
     ## Align X_train
-    X_train, y_train_int, y_train = align_set(X_train, y_train_int, input_stl, CLASS_NB, align_iter=FLAGS.align_iter)
+    X_train, y_train_int, y_train = align_set(X_train, y_train_int, input_stl, CLASS_NB, align_iter=align_iter)
         
+    # X_train = X_train[:10]
+    # y_train = y_train[:10]
+    # y_train_int = y_train_int[:10]
+
     ## Train Data CVAE 
     print("Preparing CVAE models . . .")
     
-    cvae = CVAE_model(FLAGS.latent_size, SEG_SIZE, CHANNEL_NB, CLASS_NB, min_train=min_train, max_train=max_train,
-                      arch=FLAGS.arch, show_summary=0)
+    cvae = CVAE_model(latent_size, SEG_SIZE, CHANNEL_NB, CLASS_NB, min_train=min_train, max_train=max_train,
+                      arch=arch, show_summary=0)
     
-    cvae_model_path = path_dict['cvae_align']+"CVAE_"+FLAGS.dataset_name+"_"+FLAGS.arch+"_weights"
+    cvae_model_path = path_dict['cvae_align']+"CVAE_"+dataset_name+"_"+arch+"_weights"
     
-    if os.path.isfile(cvae_model_path+".index") and not FLAGS.train_ml:
+    if os.path.isfile(cvae_model_path+".index") and not train_ml:
         cvae.train(X_train, y_train, checkpoint_path=cvae_model_path, 
                 new_train=False)
     else:
         cvae.train(X_train, y_train, checkpoint_path=cvae_model_path,  
-                    epochs=FLAGS.epochs, batch_size=FLAGS.batch_size, new_train=True, verbose=0)
+                    epochs=epochs, batch_size=batch_size, new_train=True, verbose=0)
                     
     
     ## STL Data decomp
-    if os.path.isfile(path_dict['stl_align']+FLAGS.dataset_name+"_STL_decomp.pkl"):    
-        input_stl = pkl.load(open(path_dict['stl_align']+FLAGS.dataset_name+"_STL_decomp.pkl", 'rb'))
-    else:
-        input_stl = STL.STL_decomp(SEG_SIZE, CHANNEL_NB, X_train, y_train_int)
-        pkl.dump(input_stl, open(path_dict['stl_align']+FLAGS.dataset_name+"_STL_decomp.pkl", 'wb'))
+    input_stl = STL.STL_decomp(SEG_SIZE, CHANNEL_NB, X_train, y_train_int)
+    os.mkdir("./SeasonalRatio/STL_Align")
+    pkl.dump(input_stl, open(path_dict['stl_align']+dataset_name+"_STL_decomp.pkl", 'wb'))
             
             
     #Residulas on Train data
@@ -110,7 +141,7 @@ def main(argv):
     res_labels_hot = tf.keras.utils.to_categorical(res_labels)
     
     #Residuals on Test data
-    X_test, y_test_int, y_test = align_set(X_test, y_test_int, input_stl, CLASS_NB, align_iter=FLAGS.align_iter)
+    X_test, y_test_int, y_test = align_set(X_test, y_test_int, input_stl, CLASS_NB, align_iter=align_iter)
     residuals_test, res_labels_test = input_stl.residuals_of(X_test, y_test_int)
     res_labels_test_hot = tf.keras.utils.to_categorical(res_labels_test)
     
@@ -119,11 +150,11 @@ def main(argv):
     # max_train = np.max(np.max(residuals_train, axis=2), axis=0).flatten()
     min_train = np.min(residuals_train)
     max_train = np.max(residuals_train)
-    rescvae = CVAE_model(FLAGS.latent_size, SEG_SIZE, CHANNEL_NB, CLASS_NB, min_train=min_train, max_train=max_train,
-                      arch=FLAGS.arch, show_summary=0)
+    rescvae = CVAE_model(latent_size, SEG_SIZE, CHANNEL_NB, CLASS_NB, min_train=min_train, max_train=max_train,
+                      arch=arch, show_summary=0)
     
-    rescvae_model_path = path_dict['rescvae_align']+"CVAE_"+FLAGS.dataset_name+"_"+FLAGS.arch+"_weights"
-    if os.path.isfile(rescvae_model_path+".index") and not FLAGS.train_ml:
+    rescvae_model_path = path_dict['rescvae_align']+"CVAE_"+dataset_name+"_"+arch+"_weights"
+    if os.path.isfile(rescvae_model_path+".index") and not train_ml:
         rescvae.train(residuals_train, res_labels_hot, checkpoint_path=rescvae_model_path, 
                 new_train=False)
     else:
@@ -137,20 +168,21 @@ def main(argv):
     ll_rem_in = rescvae.likelihood(residuals_train, res_labels_hot,  mc_range=50)
     
     ratio1 = ll_x_in/ll_rem_in
-    pkl.dump([ratio1, ll_x_in, ll_rem_in], open(path_dict['results_align']+FLAGS.dataset_name+"_res.pkl", 'wb'))
+    os.mkdir("./SeasonalRatio/Results_Align")
+    pkl.dump([ratio1, ll_x_in, ll_rem_in], open(path_dict['results_align']+dataset_name+"_res.pkl", 'wb'))
     
     ll_x_in_test = cvae.likelihood(X_test, y_test,  mc_range=50)
     ll_rem_in_test = rescvae.likelihood(residuals_test, res_labels_test_hot,  mc_range=50)
     
     ratio_test = ll_x_in_test/ll_rem_in_test
-    pkl.dump([ratio_test, ll_x_in_test, ll_rem_in_test], open(path_dict['results_align']+FLAGS.dataset_name+"_res_onTest.pkl", 'wb'))
+    pkl.dump([ratio_test, ll_x_in_test, ll_rem_in_test], open(path_dict['results_align']+dataset_name+"_res_onTest.pkl", 'wb'))
   
     ## Define out_data as real world distribution
     print("-- In-domain OOD Data . . .")
     ratio_on_ood = {}
     with open(json_param) as jf:
         info = json.load(jf)
-        d = info[FLAGS.dataset_name_ood]
+        d = info[dataset_name_ood]
         path = d['path']
     #Data Reading
     ood_X_train, ood_y_train_int, ood_X_test, ood_y_test_int = pkl.load(open(path, 'rb'))
@@ -175,11 +207,11 @@ def main(argv):
         ood_X_test = np.expand_dims(ood_X_test, axis=1)  # Adding a dimension after samples
         
 
-    ood_X_train = adjust_seg_size(ood_X_train, (SEG_SIZE, CHANNEL_NB))       
-    ood_X_test = adjust_seg_size(ood_X_test, (SEG_SIZE, CHANNEL_NB)) 
+    # ood_X_train = adjust_seg_size(ood_X_train, (SEG_SIZE, CHANNEL_NB))       
+    # ood_X_test = adjust_seg_size(ood_X_test, (SEG_SIZE, CHANNEL_NB)) 
     ood_y_train_int = adjust_labels(ood_y_train_int, CLASS_NB)
     ood_y_test_int = adjust_labels(ood_y_test_int, CLASS_NB)
-    
+
     ood_X_train = ood_X_train.reshape((-1, SEG_SIZE, CHANNEL_NB))
     ood_X_test = ood_X_test.reshape((-1, SEG_SIZE, CHANNEL_NB))
     ood_X = np.concatenate([ood_X_train, ood_X_test], axis=0)
@@ -187,8 +219,11 @@ def main(argv):
     ood_y_test = tf.keras.utils.to_categorical(ood_y_test_int)
     ood_y_int = np.concatenate([ood_y_train_int, ood_y_test_int], axis=0)
     ood_y = np.concatenate([ood_y_train, ood_y_test], axis=0)
-    ood_x, ood_y_int, ood_y = align_set(ood_X, ood_y_int, input_stl, CLASS_NB, align_iter=FLAGS.align_iter) #Align
-        
+    ood_x, ood_y_int, ood_y = align_set(ood_X, ood_y_int, input_stl, CLASS_NB, align_iter=align_iter) #Align
+
+    # TODO INFERENCE PROBABLY STARTS HERE
+    start = time.time()
+
     residuals_ood, res_ood_labels = input_stl.residuals_of(ood_X, ood_y_int)
     res_ood_labels_hot = tf.keras.utils.to_categorical(res_ood_labels)
     
@@ -197,26 +232,33 @@ def main(argv):
     
     ratio_ood = ll_x_ood/ll_x_ood_rem
     
-    ratio_on_ood[FLAGS.dataset_name_ood] = [ratio_ood, ll_x_ood, ll_x_ood_rem]
-    pkl.dump([ratio_on_ood], open(path_dict['results_align']+FLAGS.dataset_name+"_OODres.pkl", 'wb'))
+    ratio_on_ood[dataset_name_ood] = [ratio_ood, ll_x_ood, ll_x_ood_rem]
+    pkl.dump([ratio_on_ood], open(path_dict['results_align']+dataset_name+"_OODres.pkl", 'wb'))
         
     ## Compute AUROC score
 
-    ratio1, _, _ = pkl.load(open(path_dict['results_align']+FLAGS.dataset_name+"_res.pkl", 'rb'))
-    ratio_test, _, _ = pkl.load(open(path_dict['results_align']+FLAGS.dataset_name+"_res_onTest.pkl", 'rb'))
-    ratio_in = np.concatenate([ratio1, ratio_test])    
-    ratio_on_ood = pkl.load(open(path_dict['results_align']+FLAGS.dataset_name+"_OODres.pkl", 'rb'))[0]
+    ratio1, _, _ = pkl.load(open(path_dict['results_align']+dataset_name+"_res.pkl", 'rb'))
+    ratio_test, _, _ = pkl.load(open(path_dict['results_align']+dataset_name+"_res_onTest.pkl", 'rb'))
+    ratio_in = np.concatenate([ratio_test])    
+    ratio_on_ood = pkl.load(open(path_dict['results_align']+dataset_name+"_OODres.pkl", 'rb'))[0]
     
-    ratio_ood, ll_x_ood, ll_x_ood_rem = ratio_on_ood[FLAGS.dataset_name_ood]
+    ratio_ood, ll_x_ood, ll_x_ood_rem = ratio_on_ood[dataset_name_ood]
     ratio_dict_real = {
             'in': ratio_in,
             'ood': ratio_ood
         }
     ratio_elements, ratio_labels = au.label_ratio(ratio_dict_real)
+    
+    end = time.time()
+    inference_time=(end - start)
+
     real_auroc_ratio ="%.2f"%au.auroc(ratio_in, ratio_elements, ratio_labels)
     print("AUROC score: ", real_auroc_ratio)
 
+    # print(ratio_in,ratio_elements, ratio_labels)
     f1, p ,r, tp,tn,fp,fn = au.f1(ratio_in, ratio_elements, ratio_labels)
+
+    
 
     print("F1 score:", f1)
 
@@ -224,41 +266,45 @@ def main(argv):
 
     print("Precision: ", p)
     print("Recall: ", r)
-    print(f"tp,tn,fp,fn\n",tp,tn,fp,fn)
+    print("tp,tn,fp,fn\n",tp,tn,fp,fn)
 
-        
+    return {
+        "Train Dataset": dataset_name,
+        "OOD Dataset": dataset_name_ood,
+        "F1-Score": f1,
+        "Precision": p,
+        "Recall": r,
+        "tp": tp,
+        "tn": tn,
+        "fp": fp,
+        "fn": fn,
+        "inference_time":inference_time}
+
+
 if __name__=="__main__":
-   flags.DEFINE_string('dataset_name', 'Cricket', 'Dataset name')
-   flags.DEFINE_string('dataset_name_ood', 'Epilepsy', 'Dataset name')
-   flags.DEFINE_boolean('train_ml', True, 'True: Train models; False: Load models')
-   flags.DEFINE_integer('latent_size', 32, 'Dimension of the latent space')
-   flags.DEFINE_string('arch', 'CONV', 'Model architecture')
-   flags.DEFINE_integer('batch_size', 32, 'Batch size')
-   flags.DEFINE_integer('epochs', 500, 'Epochs')
-   flags.DEFINE_integer('align_iter', 5, 'Number of iterations for alignment process')
-   app.run(main)            
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
+    
+    parent_dir = 'custom_datasets'  # Parent directory containing subdirectories for each dataset
+    datasets = [os.path.join(parent_dir, d, f"{d}.csv") 
+                for d in os.listdir(parent_dir) 
+                if os.path.isdir(os.path.join(parent_dir, d))]
+    results = []
+    for train_dataset, ood_dataset in sorted(product(datasets, datasets)):
+        if "rpi" not in train_dataset and "rpi" not in ood_dataset:
+            train_dataset = train_dataset.split("\\")[1]
+            ood_dataset = ood_dataset.split("\\")[1]
+
+            shutil.rmtree("SeasonalRatio")
+
+            results.append(main(train_dataset, ood_dataset))
+            output_csv = f'attempt27-3.csv'
+            results_df = pd.DataFrame(results)
+            results_df.to_csv(output_csv, index=False)
+            print(results)
+            break
+    
+    # results.append(main("hand_landmarking","hand_landmarking"))
+
+    output_csv = f'attempt27-3 with 720 samples as test.csv'
+    results_df = pd.DataFrame(results)
+    results_df.to_csv(output_csv, index=False)
+    print(results)

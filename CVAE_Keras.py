@@ -76,7 +76,7 @@ class Sampling(layers.Layer):
         z_mean, z_log_var = inputs
         batch = tf.shape(z_mean)[0]
         dim = tf.shape(z_mean)[1]
-        epsilon = tf.keras.backend.random_normal(shape=(batch, dim), seed=0)
+        epsilon = tf.keras.backend.random_normal(shape=(batch, dim))
         return z_mean + tf.exp(0.5 * z_log_var) * epsilon
   
 
@@ -223,7 +223,7 @@ class CVAE_model():
             self.vae.load_weights(checkpoint_path)
         else:
             self.vae.compile(optimizer=keras.optimizers.Adam(1e-4))
-            self.vae.fit(data, labels, epochs=epochs, batch_size=batch_size, verbose=verbose)
+            self.vae.fit(data, labels, epochs=epochs, batch_size=batch_size, shuffle=False, verbose=verbose)
             self.vae.save_weights(checkpoint_path)
     
     def predict(self, data, labels):

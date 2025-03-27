@@ -4,7 +4,9 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from sklearn.metrics import f1_score, precision_score, recall_score, confusion_matrix
 from sklearn.preprocessing import StandardScaler
-from sklearn.ensemble import IsolationForest
+import tensorflow as tf
+from tensorflow.keras.models import Model
+from tensorflow.keras.layers import Input, Dense, Dropout
 import random
 import time
 from itertools import product
@@ -13,8 +15,10 @@ from itertools import product
 # Set seeds & determinism
 # ============================
 SEED = 42
+os.environ['TF_DETERMINISTIC_OPS'] = '1'
 os.environ['PYTHONHASHSEED'] = str(SEED)
 np.random.seed(SEED)
+tf.random.set_seed(SEED)
 random.seed(SEED)
 
 # ============================
@@ -82,43 +86,50 @@ def preprocess_data(data, scaler=None):
     return data_scaled, scaler
 
 # ============================
-# Random Forest–Based Anomaly Detector (IsolationForest)
+# Autoencoder Model and Training
 # ============================
-def build_rf_detector(train_data):
-    """
-    Trains an IsolationForest on the provided normal (training) data.
-    """
-    # Using IsolationForest (a tree-based anomaly detector)
-    model = IsolationForest(random_state=SEED, contamination='auto')
-    model.fit(train_data)
-    return model
+def build_autoencoder(input_dim):
+    input_layer = Input(shape=(input_dim,))
+    encoded = Dense(128, activation='relu', kernel_regularizer='l2')(input_layer)
+    encoded = Dropout(0.2)(encoded)
+    encoded = Dense(64, activation='relu', kernel_regularizer='l2')(encoded)
+    latent = Dense(32, activation='relu', name='latent_space')(encoded)
+    decoded = Dense(64, activation='relu')(latent)
+    decoded = Dense(128, activation='relu')(decoded)
+    output_layer = Dense(input_dim, activation='sigmoid')(decoded)
+    
+    autoencoder = Model(inputs=input_layer, outputs=output_layer)
+    encoder = Model(inputs=input_layer, outputs=latent)
+    autoencoder.compile(optimizer='adam', loss='mse')
+    return autoencoder, encoder
 
-def compute_anomaly_score(model, data):
-    """
-    Computes an anomaly score for each sample.
-    We take the negative of score_samples so that higher values indicate more anomalous behavior.
-    """
-    # Note: IsolationForest.score_samples returns higher values for more normal points.
-    # Taking the negative inverts that.
-    scores = -model.score_samples(data)
-    return scores
+def train_autoencoder(autoencoder, train_data, epochs=50, batch_size=32):
+    history = autoencoder.fit(train_data, train_data,
+                              epochs=epochs,
+                              batch_size=batch_size,
+                              shuffle=True,
+                              validation_split=0.2,
+                              verbose=0)
+    return history
+
+def compute_reconstruction_error(autoencoder, data):
+    reconstructed = autoencoder.predict(data)
+    mse = np.mean(np.power(data - reconstructed, 2), axis=1)
+    return mse
 
 # ============================
-# Balanced Evaluation Function for RF Detector
+# Balanced Evaluation Function
 # ============================
-def evaluate_balanced_rf(model, normal_scaled, anomaly_scaled, threshold_percentile=95):
-    normal_scores = compute_anomaly_score(model, normal_scaled)
-    anomaly_scores = compute_anomaly_score(model, anomaly_scaled)
+def evaluate_balanced(autoencoder, normal_scaled, anomaly_scaled, threshold_percentile):
+    normal_errors = compute_reconstruction_error(autoencoder, normal_scaled)
+    anomaly_errors = compute_reconstruction_error(autoencoder, anomaly_scaled)
+    threshold = np.percentile(normal_errors, threshold_percentile)
     
-    # Set threshold based on the normal scores (e.g., 95th percentile)
-    threshold = np.percentile(normal_scores, threshold_percentile)
+    normal_preds = (normal_errors > threshold).astype(int)
+    anomaly_preds = (anomaly_errors > threshold).astype(int)
     
-    # Prediction: if score > threshold, classify as anomaly (1), else normal (0)
-    normal_preds = (normal_scores > threshold).astype(int)
-    anomaly_preds = (anomaly_scores > threshold).astype(int)
-    
-    normal_labels = np.zeros(len(normal_scores), dtype=int)
-    anomaly_labels = np.ones(len(anomaly_scores), dtype=int)
+    normal_labels = np.zeros(len(normal_errors), dtype=int)
+    anomaly_labels = np.ones(len(anomaly_errors), dtype=int)
     
     y_true = np.concatenate([normal_labels, anomaly_labels])
     y_pred = np.concatenate([normal_preds, anomaly_preds])
@@ -131,12 +142,13 @@ def evaluate_balanced_rf(model, normal_scaled, anomaly_scaled, threshold_percent
     return f1, precision, recall, cm, threshold
 
 # ============================
-# Main Pipeline for Combined Evaluation with RF
+# Main Pipeline
 # ============================
-def main_rf(parent_dir, output_csv):
+def main(parent_dir, output_csv, threshold_arg):
+
     # Gather dataset CSV paths from subdirectories
-    datasets = [os.path.join(parent_dir, d, f"{d}.csv")
-                for d in os.listdir(parent_dir)
+    datasets = [os.path.join(parent_dir, d, f"{d}.csv") 
+                for d in os.listdir(parent_dir) 
                 if os.path.isdir(os.path.join(parent_dir, d))]
     
     results = []
@@ -154,13 +166,14 @@ def main_rf(parent_dir, output_csv):
         'time_variation': simulate_time_based_variation
     }
     
-    # Train an RF-based anomaly detector on each dataset and generate simulated versions
+    # Train an autoencoder on each dataset and generate simulated anomaly versions
     for train_dataset in datasets:
         df = pd.read_csv(train_dataset)
         df = df.iloc[:, :-1]  # Drop target column
         train_scaled, scaler = preprocess_data(df)
-        rf_model = build_rf_detector(train_scaled)
-        trained_models[train_dataset] = (rf_model, train_scaled, scaler)
+        autoencoder, _ = build_autoencoder(train_scaled.shape[1])
+        train_autoencoder(autoencoder, train_scaled)
+        trained_models[train_dataset] = (autoencoder, train_scaled, scaler)
         
         # Generate simulated anomaly versions from the original data
         sim_versions = {}
@@ -169,11 +182,11 @@ def main_rf(parent_dir, output_csv):
             sim_versions[sim_name] = sim_df
         simulated_versions[train_dataset] = sim_versions
     
-    # Evaluation (a): Use original anomaly datasets from different machines
+    # Evaluate: (a) original anomaly datasets from different machines
     for train_dataset, anomaly_dataset in sorted(product(datasets, datasets)):
         if train_dataset == anomaly_dataset:
             continue
-        rf_model, train_scaled, scaler = trained_models[train_dataset]
+        autoencoder, train_scaled, scaler = trained_models[train_dataset]
         normal_indices = np.random.choice(train_scaled.shape[0], size=1800, replace=False)
         normal_eval = train_scaled[normal_indices]
         
@@ -181,7 +194,7 @@ def main_rf(parent_dir, output_csv):
         anomaly_data = anomaly_data.iloc[:, :-1]
         anomaly_eval, _ = preprocess_data(anomaly_data, scaler)
         
-        f1, precision, recall, cm, threshold = evaluate_balanced_rf(rf_model, normal_eval, anomaly_eval)
+        f1, precision, recall, cm, threshold = evaluate_balanced(autoencoder, normal_eval, anomaly_eval,threshold_arg)
         results.append({
             "Train Dataset": os.path.basename(train_dataset),
             "Anomaly Dataset": os.path.basename(anomaly_dataset),
@@ -189,13 +202,13 @@ def main_rf(parent_dir, output_csv):
             "F1-Score": f1,
             "Precision": precision,
             "Recall": recall,
-            "Confusion Matrix": str(cm),
+            "Confusion Matrix": str(cm).replace("\\n", ""),
             "Threshold": threshold
         })
     
-    # Evaluation (b): Use simulated anomaly datasets (derived from the same dataset)
+    # Evaluate: (b) simulated anomaly datasets (derived from the same dataset)
     for train_dataset in datasets:
-        rf_model, train_scaled, scaler = trained_models[train_dataset]
+        autoencoder, train_scaled, scaler = trained_models[train_dataset]
         normal_indices = np.random.choice(train_scaled.shape[0], size=1800, replace=False)
         normal_eval = train_scaled[normal_indices]
         sim_versions = simulated_versions[train_dataset]
@@ -204,7 +217,7 @@ def main_rf(parent_dir, output_csv):
             # In case masking introduced NaNs, fill them (e.g., with column means)
             sim_sample = sim_sample.fillna(sim_sample.mean())
             anomaly_eval, _ = preprocess_data(sim_sample, scaler)
-            f1, precision, recall, cm, threshold = evaluate_balanced_rf(rf_model, normal_eval, anomaly_eval)
+            f1, precision, recall, cm, threshold = evaluate_balanced(autoencoder, normal_eval, anomaly_eval,threshold_arg)
             results.append({
                 "Train Dataset": os.path.basename(train_dataset),
                 "Anomaly Dataset": os.path.basename(train_dataset),
@@ -212,15 +225,27 @@ def main_rf(parent_dir, output_csv):
                 "F1-Score": f1,
                 "Precision": precision,
                 "Recall": recall,
-                "Confusion Matrix": str(cm),
+                "Confusion Matrix": str(cm).replace("\\n", ""),
                 "Threshold": threshold
             })
     
     results_df = pd.DataFrame(results)
     results_df.to_csv(output_csv, index=False)
-    print(f"RF-based evaluation results saved to {output_csv}")
+    print(f"Combined evaluation results saved to {output_csv}")
 
-# Example usage:
-parent_dir = 'custom_datasets'  # Directory with subdirectories for each dataset
-output_csv = 'combined_rf_evaluation_results.csv'
-main_rf(parent_dir, output_csv)
+    return results_df["F1-Score"].mean()
+
+# Example usage
+parent_dir = 'custom_datasets'  # Parent directory containing subdirectories for each dataset
+
+averages = []
+
+for i in range(5,100,5):
+    print(i)
+    output_csv = f'combined_evaluation_results_threshold_{i}.csv'
+
+    averages.append({i:main(parent_dir, output_csv, i)})
+
+
+for average in averages:
+    print(average)

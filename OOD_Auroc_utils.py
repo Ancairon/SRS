@@ -117,7 +117,11 @@ def label_ratio(ratio_dict):
         for el in v:
             ratio_elements.append(el)
             if k == 'in':
+                # if is_same_ds:
+                #     ratio_labels.append(1)
+                # else:
                 ratio_labels.append(-1)
+                # continue
             else:
                 ratio_labels.append(1)
     return ratio_elements, ratio_labels
@@ -135,6 +139,7 @@ def tpr_fpr(ratio_ref, ratio_elements, ratio_labels, th):
 def precision_recall(ratio_ref, ratio_elements, ratio_labels, th):
     predicted_ood = is_OOD(ratio_ref, ratio_elements,
                            method='var', var_factor=th)
+    # print(ratio_labels, predicted_ood)
     tn, fp, fn, tp = cm(ratio_labels, predicted_ood).ravel()
     # if tp==0:
     #     return 0, 0

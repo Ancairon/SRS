@@ -4,13 +4,13 @@ import requests
 import os
 
 
-def getDataFromAPI(whom, ip, chart, dimension, timeStepsBack=60 * 60):
+def getDataFromAPI(whom, ip, chart, dimension, timeStepsBack=(60 * 60)*24*7):
     points = timeStepsBack
 
-    r = requests.get(
-        'http://{}:19999/api/v1/data?chart={}&dim'
-        'ension={}&after=-{}&before={}&points={}&group=average&gtime=0&format=json&options=seconds&options'
-        '=jsonwrap'.format(ip, chart, dimension, timeStepsBack, 0, points))
+    query = 'http://{}:19999/api/v2/data?chart={}&dimension={}&after=-{}&before={}&points={}&group=average&gtime=0&tier=0&format=json&options=seconds&options=jsonwrap'.format(ip, chart, dimension, timeStepsBack, 0, points)
+    print(query)
+
+    r = requests.get(query, timeout=60*60)
 
     a = r.json()['result']['data']
 
@@ -23,7 +23,7 @@ def getDataFromAPI(whom, ip, chart, dimension, timeStepsBack=60 * 60):
 
     os.remove("a.json")
 
-name = "idle2_rpi"
+name = "idle3_rpi"
 ip = "192.168.1.27"
 
 # getDataFromAPI(name, ip, "system.cpu", "user")

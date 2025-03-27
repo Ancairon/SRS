@@ -124,5 +124,17 @@
     "SEG_SIZE": 1,
     "CHANNEL_NB": 9,
     "CLASS_NB": 1
+  },
+  "idle1": {
+    "path": "Dataset/idle1.pkl",
+    "SEG_SIZE": 1,
+    "CHANNEL_NB": 9,
+    "CLASS_NB": 1
+  },
+  "idle2": {
+    "path": "Dataset/idle2.pkl",
+    "SEG_SIZE": 1,
+    "CHANNEL_NB": 9,
+    "CLASS_NB": 1
   }
 }
