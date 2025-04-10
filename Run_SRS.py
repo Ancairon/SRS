@@ -102,8 +102,8 @@ def main(dataset_name, dataset_name_ood):
     #     input_stl = pkl.load(open(path_dict['stl']+dataset_name+"_STL_decomp.pkl", 'rb'))
     # else:
     input_stl = STL.STL_decomp(SEG_SIZE, CHANNEL_NB, X_train, y_train_int)
-    os.mkdir("./SeasonalRatio")
-    os.mkdir("./SeasonalRatio/STL")
+    # os.mkdir("./SeasonalRatio")
+    # os.mkdir("./SeasonalRatio/STL")
     pkl.dump(input_stl, open(path_dict['stl']+dataset_name+"_STL_decomp.pkl", 'wb'))
                 
                 
@@ -132,7 +132,7 @@ def main(dataset_name, dataset_name_ood):
     
     ## STL Data decomp
     input_stl = STL.STL_decomp(SEG_SIZE, CHANNEL_NB, X_train, y_train_int)
-    os.mkdir("./SeasonalRatio/STL_Align")
+    # os.mkdir("./SeasonalRatio/STL_Align")
     pkl.dump(input_stl, open(path_dict['stl_align']+dataset_name+"_STL_decomp.pkl", 'wb'))
             
             
@@ -168,7 +168,7 @@ def main(dataset_name, dataset_name_ood):
     ll_rem_in = rescvae.likelihood(residuals_train, res_labels_hot,  mc_range=50)
     
     ratio1 = ll_x_in/ll_rem_in
-    os.mkdir("./SeasonalRatio/Results_Align")
+    # os.mkdir("./SeasonalRatio/Results_Align")
     pkl.dump([ratio1, ll_x_in, ll_rem_in], open(path_dict['results_align']+dataset_name+"_res.pkl", 'wb'))
     
     ll_x_in_test = cvae.likelihood(X_test, y_test,  mc_range=50)
@@ -288,23 +288,23 @@ if __name__=="__main__":
                 for d in os.listdir(parent_dir) 
                 if os.path.isdir(os.path.join(parent_dir, d))]
     results = []
-    for train_dataset, ood_dataset in sorted(product(datasets, datasets)):
-        if "rpi" not in train_dataset and "rpi" not in ood_dataset:
-            train_dataset = train_dataset.split("\\")[1]
-            ood_dataset = ood_dataset.split("\\")[1]
+    # for train_dataset, ood_dataset in sorted(product(datasets, datasets)):
+    #     if "rpi" not in train_dataset and "rpi" not in ood_dataset and "pose_landmarking" in train_dataset:
+    #         train_dataset = train_dataset.split("\\")[1]
+    #         ood_dataset = ood_dataset.split("\\")[1]
 
-            shutil.rmtree("SeasonalRatio")
+    #         shutil.rmtree("SeasonalRatio")
 
-            results.append(main(train_dataset, ood_dataset))
-            output_csv = f'attempt27-3.csv'
-            results_df = pd.DataFrame(results)
-            results_df.to_csv(output_csv, index=False)
-            print(results)
-            break
+    #         results.append(main(train_dataset, ood_dataset))
+    #         output_csv = f'10-sample-attempt.csv'
+    #         results_df = pd.DataFrame(results)
+    #         results_df.to_csv(output_csv, index=False)
+    #         print(results)
+    #         # break
     
-    # results.append(main("hand_landmarking","hand_landmarking"))
+    results.append(main("hand_landmarking","pose_landmarking"))
 
-    output_csv = f'attempt27-3 with 720 samples as test.csv'
+    output_csv = f'10-sample-attempt.csv'
     results_df = pd.DataFrame(results)
     results_df.to_csv(output_csv, index=False)
     print(results)
