@@ -126,7 +126,7 @@ def main_rf(parent_dir, output_csv):
         normal_eval = train_scaled[normal_indices]
 
         anomaly_data = pd.read_csv(anomaly_dataset).sample(
-            n=10, random_state=SEED)
+            n=30, random_state=SEED)
         anomaly_data = anomaly_data.iloc[:, :-1]
         anomaly_eval, _ = preprocess_data(anomaly_data, scaler)
 
@@ -153,5 +153,5 @@ def main_rf(parent_dir, output_csv):
 
 # Example usage:
 parent_dir = 'custom_datasets'  # Directory with subdirectories for each dataset
-output_csv = 'rf_evaluation_results.csv'
+output_csv = '30sample-rf_evaluation_results.csv'
 main_rf(parent_dir, output_csv)
