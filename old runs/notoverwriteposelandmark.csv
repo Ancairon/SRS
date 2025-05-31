@@ -1,0 +1,10 @@
+Train Dataset,OOD Dataset,F1-Score,Precision,Recall,tp,tn,fp,fn,inference_time
+pose_landmarking,audio_classification,1.0,1.0,1.0,3600,135,0,0,33.79052495956421
+pose_landmarking,face_detection,1.0,1.0,1.0,3600,135,0,0,34.276784896850586
+pose_landmarking,face_landmarking,1.0,1.0,1.0,3600,135,0,0,30.11702275276184
+pose_landmarking,gesture_recognition,1.0,1.0,1.0,3600,135,0,0,30.108632802963257
+pose_landmarking,hand_landmarking,1.0,1.0,1.0,3600,135,0,0,30.17176651954651
+pose_landmarking,idle1,1.0,1.0,1.0,3600,135,0,0,30.512298822402954
+pose_landmarking,idle2,1.0,1.0,1.0,3600,135,0,0,30.68777561187744
+pose_landmarking,object_detection,1.0,1.0,1.0,3600,135,0,0,31.25680685043335
+pose_landmarking,pose_landmarking,0.9990287220757597,0.9980593290823399,1.0,3600,128,7,0,31.273018836975098
