@@ -150,7 +150,7 @@ def main(parent_dir, output_csv, threshold_arg):
         normal_eval = train_scaled[normal_indices]
 
         anomaly_data = pd.read_csv(anomaly_dataset).sample(
-            n=10, random_state=SEED)
+            n=20, random_state=SEED)
         anomaly_data = anomaly_data.iloc[:, :-1]
         anomaly_eval, _ = preprocess_data(anomaly_data, scaler)
 

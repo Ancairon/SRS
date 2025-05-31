@@ -129,8 +129,8 @@ def main_arma(parent_dir, output_csv, arma_order=(5,1,0)):
             idx = np.random.choice(train_scaled.shape[0], 1, replace=False)
             normal_eval = train_scaled[idx]
 
-            # 10 anomaly samples
-            df_anom = pd.read_csv(anomaly_path).sample(n=10, random_state=SEED).iloc[:, :-1]
+            # 20 anomaly samples
+            df_anom = pd.read_csv(anomaly_path).sample(n=20, random_state=SEED).iloc[:, :-1]
             anomaly_eval, _ = preprocess_data(df_anom, scaler)
 
             f1, prec, rec, tn, fp, fn, tp, thr, t_inf = evaluate_balanced_arma(
@@ -155,4 +155,4 @@ def main_arma(parent_dir, output_csv, arma_order=(5,1,0)):
     print(f"ARIMA-based evaluation results saved to {output_csv}")
 
 if __name__ == "__main__":
-    main_arma('custom_datasets', '10sample-arima_evaluation_results.csv', arma_order=(5,1,0))
+    main_arma('custom_datasets', '20sample-arima_evaluation_results.csv', arma_order=(5,1,0))

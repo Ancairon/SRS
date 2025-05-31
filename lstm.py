@@ -166,8 +166,8 @@ def main_lstm(parent_dir, output_csv):
         idx = np.random.choice(len(scaled_train), size=1, replace=False)
         normal_eval = scaled_train[idx]
 
-        # 10 anomaly samples
-        df_anom = pd.read_csv(anomaly_path).sample(n=10, random_state=SEED).iloc[:, :-1]
+        # 20 anomaly samples
+        df_anom = pd.read_csv(anomaly_path).sample(n=20, random_state=SEED).iloc[:, :-1]
         anomaly_eval, _ = preprocess_data(df_anom, scaler)
 
         f1, prec, rec, tn, fp, fn, tp, thr, t_inf = evaluate_balanced_lstm(
@@ -195,5 +195,5 @@ def main_lstm(parent_dir, output_csv):
 # Example usage:
 if __name__ == "__main__":
     parent_dir = 'custom_datasets'
-    output_csv = '10sample-lstm_evaluation_results.csv'
+    output_csv = '20sample-lstm_evaluation_results.csv'
     main_lstm(parent_dir, output_csv)

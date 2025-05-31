@@ -66,7 +66,7 @@ def compute_anomaly_score(model, data):
 # ============================
 
 
-def evaluate_balanced_rf(model, normal_scaled, anomaly_scaled, threshold_percentile=80):
+def evaluate_balanced_rf(model, normal_scaled, anomaly_scaled, threshold_percentile=40):
     start = time.time()
     normal_scores = compute_anomaly_score(model, normal_scaled)
     anomaly_scores = compute_anomaly_score(model, anomaly_scaled)
@@ -117,6 +117,9 @@ def main_rf(parent_dir, output_csv):
         trained_models[train_dataset] = (rf_model, train_scaled, scaler)
 
     # Evaluation (a): Use original anomaly datasets from different machines
+    # for train_dataset, anomaly_dataset in sorted(product(datasets, datasets)):
+    #     print(train_dataset)
+    # Evaluation (a): Use original anomaly datasets from different machines
     for train_dataset, anomaly_dataset in sorted(product(datasets, datasets)):
         if "rpi" in train_dataset or "rpi" in anomaly_dataset:
             continue
@@ -125,33 +128,67 @@ def main_rf(parent_dir, output_csv):
             train_scaled.shape[0], size=1, replace=False)
         normal_eval = train_scaled[normal_indices]
 
-        anomaly_data = pd.read_csv(anomaly_dataset).sample(
-            n=10, random_state=SEED)
-        anomaly_data = anomaly_data.iloc[:, :-1]
-        anomaly_eval, _ = preprocess_data(anomaly_data, scaler)
+        if train_dataset == "custom_datasets\\hand_landmarking\\hand_landmarking.csv" and anomaly_dataset == "custom_datasets\\gesture_recognition\\gesture_recognition.csv":
 
-        f1, precision, recall, tn, fp, fn, tp, threshold, inference_time = evaluate_balanced_rf(
-            rf_model, normal_eval, anomaly_eval)
-        results.append({
-            "Train Dataset": os.path.basename(train_dataset),
-            "Anomaly Dataset": os.path.basename(anomaly_dataset),
-            "Inference time": inference_time,
-            "tn": tn,
-            "tp": tp,
-            "fn": fn,
-            "fp": fp,
-            "Precision": precision,
-            "Recall": recall,
-            "F1-Score": f1,
-            "Threshold": threshold
-        })
+            # if "rpi" in train_dataset or "rpi" in anomaly_dataset:
+            #     continue
 
-    results_df = pd.DataFrame(results)
-    results_df.to_csv(output_csv, index=False)
-    print(f"RF-based evaluation results saved to {output_csv}")
+            three_times_anomaly = False
+            batches = 3
+
+            while not three_times_anomaly:
+
+                anomaly_data = pd.read_csv(anomaly_dataset).sample(
+                    n=batches, random_state=SEED)
+                anomaly_data = anomaly_data.iloc[:, :-1]
+                anomaly_eval, _ = preprocess_data(anomaly_data, scaler)
+
+                f1, precision, recall, tn, fp, fn, tp, threshold, inference_time = evaluate_balanced_rf(
+                    rf_model, normal_eval, anomaly_eval)  # here we need to transofrm if we do for all datasets
+                tn = 0
+
+                if train_dataset == anomaly_dataset:
+                    fp=tp
+                    tp =0
+                    tn = fn
+                    fn = 0
+
+                # p = tp / (tp+fp)
+                # r = tp/(tp+fn)
+
+                # f1alt = (2*p*r)/(p+r)
+
+                # f1 = tp/(tp+(fp+fn)/2)
+
+                a = (tn+tp)/(tn+tp+fn+fp)
+
+                print(f"{a},{tp},{fn},{tn},{fp}")
+
+                batches += 1
+
+                if batches == 50:
+                    three_times_anomaly = True
+
+        # results.append({
+        #     "Train Dataset": os.path.basename(train_dataset),
+        #     "Anomaly Dataset": os.path.basename(anomaly_dataset),
+        #     "Inference time": inference_time,
+        #     "tn": tn,
+        #     "tp": tp,
+        #     "fn": fn,
+        #     "fp": fp,
+        #     "Precision": precision,
+        #     "Recall": recall,
+        #     "F1-Score": f1,
+        #     "Threshold": threshold
+        # })
+
+    # results_df = pd.DataFrame(results)
+    # results_df.to_csv(output_csv, index=False)
+    # print(f"RF-based evaluation results saved to {output_csv}")
 
 
 # Example usage:
 parent_dir = 'custom_datasets'  # Directory with subdirectories for each dataset
-output_csv = '10TESTsample-rf_evaluation_results.csv'
-main_rf(parent_dir, output_csv)
+# output_csv = '20sample-rf_evaluation_results.csv'
+main_rf(parent_dir, "")
