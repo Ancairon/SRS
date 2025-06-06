@@ -1,13 +1,14 @@
 import os
 import numpy as np
+import time
 import pandas as pd
 from statsmodels.tsa.arima_model import ARIMA
 from sklearn.preprocessing import StandardScaler
 
 PARENT_DIR = 'custom_datasets'
 RESULTS_CSV = 'arima_anomaly_eval_single_window.csv'
-SEQ_LEN = 30
-STEP = 30
+SEQ_LEN = 10
+STEP = 10
 THRESHOLD_PCT = 95
 SEED = 42
 
@@ -92,17 +93,21 @@ if __name__ == "__main__":
             single_window = windows[rand_idx]  # shape = (SEQ_LEN, F)
 
             # Forecast next SEQ_LEN for each feature from train series
+            inference_time = 0
+            start = time.time()
+
             forecasts = np.zeros((SEQ_LEN, F))
             for c in range(F):
                 model = arima_models[c]
                 if model is not None:
                     try:
                         fc = model.forecast(steps=SEQ_LEN)[0]
-                    except Exception:
+                    except Exception as e:
                         fc = np.zeros(SEQ_LEN)
                 else:
                     fc = np.zeros(SEQ_LEN)
                 forecasts[:, c] = fc
+            inference_time = time.time() - start
 
             se = (single_window - forecasts) ** 2  # shape = (SEQ_LEN, F)
             window_error = se.sum()  # scalar
@@ -122,6 +127,7 @@ if __name__ == "__main__":
                 'TP': TP,
                 'FN': FN,
                 'FP': "0",
+                "inference": inference_time
             })
 
     results_df = pd.DataFrame(results)

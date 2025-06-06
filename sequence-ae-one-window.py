@@ -1,6 +1,7 @@
 import os
 import numpy as np
 import pandas as pd
+import time
 import tensorflow as tf
 from tensorflow.keras.models import Model
 from tensorflow.keras.layers import Input, Dense
@@ -8,8 +9,8 @@ from sklearn.preprocessing import StandardScaler
 
 PARENT_DIR = 'custom_datasets'
 RESULTS_CSV = 'ae_anomaly_eval_single_window.csv'
-SEQ_LEN = 30
-STEP = 30
+SEQ_LEN = 10
+STEP = 10
 THRESHOLD_PCT = 95
 SEED = 42
 
@@ -91,10 +92,12 @@ if __name__ == "__main__":
             rand_idx = np.random.randint(low=0, high=test_windows.shape[0])
             single_window = test_windows[rand_idx: rand_idx + 1]
             single_scaled = scaler.transform(single_window)
-
+            
+            start = time.time()
             recon_single = ae_model.predict(single_scaled, verbose=0)
-            mse_single = np.mean(np.square(recon_single - single_scaled))
+            inference_time = time.time() - start
 
+            mse_single = np.mean(np.square(recon_single - single_scaled))
             pred = 1 if mse_single > threshold else 0
             if pred == 1:
                 TP = 1
@@ -110,6 +113,7 @@ if __name__ == "__main__":
                 'TP': TP,
                 'FN': FN,
                 'FP': "0",
+                "inference": inference_time
             })
 
     results_df = pd.DataFrame(results)

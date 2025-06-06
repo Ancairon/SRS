@@ -1,5 +1,6 @@
 import os
 import numpy as np
+import time
 import pandas as pd
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.preprocessing import StandardScaler
@@ -7,8 +8,8 @@ from sklearn.metrics import precision_score, recall_score, f1_score, confusion_m
 
 PARENT_DIR = 'custom_datasets'
 RESULTS_CSV = 'rf_anomaly_eval_single_window.csv'
-SEQ_LEN = 30
-STEP = 30
+SEQ_LEN = 10
+STEP = 10
 SEED = 42
 
 np.random.seed(SEED)
@@ -109,13 +110,16 @@ if __name__ == "__main__":
 
             rf_model = train_random_forest(X_train_scaled, y_train)
 
+            start = time.time()
             test_pred = int(rf_model.predict(single_window_scaled)[0])
+            inference_time = time.time() - start
             if test_pred == 1:
                 TP = 1
                 FN = 0
             else:
                 TP = 0
                 FN = 1
+
 
             start_row = rand_idx * STEP
 
@@ -131,6 +135,7 @@ if __name__ == "__main__":
                 'TP': TP,
                 'FN': FN,
                 'FP': "0",
+                "inference": inference_time
             })
 
     results_df = pd.DataFrame(results)

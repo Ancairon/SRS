@@ -4,12 +4,13 @@ import pandas as pd
 import tensorflow as tf
 from tensorflow.keras.models import Model
 from tensorflow.keras.layers import Input, LSTM, RepeatVector, TimeDistributed, Dense
+import time
 from sklearn.preprocessing import StandardScaler
 
 PARENT_DIR = 'custom_datasets'
 RESULTS_CSV = 'lstm_ae_anomaly_eval_single_window.csv'
-SEQ_LEN = 30
-STEP = 30
+SEQ_LEN = 10
+STEP = 10
 THRESHOLD_PCT = 95
 SEED = 42
 EPOCHS = 20
@@ -132,7 +133,9 @@ if __name__ == "__main__":
             single_scaled_flat = scaler.transform(single_flat)
             single_scaled = single_scaled_flat.reshape(1, SEQ_LEN, F)
 
+            start = time.time()
             mse_single = compute_reconstruction_errors(model, single_scaled)[0]
+            inference_time = time.time() - start
             pred = 1 if mse_single > threshold else 0
             if pred == 1:
                 TP = 1
@@ -148,6 +151,7 @@ if __name__ == "__main__":
                 'TP': TP,
                 'FN': FN,
                 'FP': "0",
+                "inference": inference_time
             })
 
     results_df = pd.DataFrame(results)
