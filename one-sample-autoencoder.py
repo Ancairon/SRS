@@ -150,7 +150,7 @@ def main(parent_dir, output_csv, threshold_arg):
         normal_eval = train_scaled[normal_indices]
 
         anomaly_data = pd.read_csv(anomaly_dataset).sample(
-            n=20, random_state=SEED)
+            n=1, random_state=SEED)
         anomaly_data = anomaly_data.iloc[:, :-1]
         anomaly_eval, _ = preprocess_data(anomaly_data, scaler)
 
@@ -159,22 +159,17 @@ def main(parent_dir, output_csv, threshold_arg):
         results.append({
             "Train Dataset": os.path.basename(train_dataset),
             "Anomaly Dataset": os.path.basename(anomaly_dataset),
-            "Inference time": inference_time,
             "tn": tn,
             "tp": tp,
             "fn": fn,
             "fp": fp,
-            "Precision": precision,
-            "Recall": recall,
-            "F1-Score": f1,
-            "Threshold": threshold
+            
         })
-
+    print(np.average(inference_time))
     results_df = pd.DataFrame(results)
     results_df.to_csv(output_csv, index=False)
     print(f"Combined evaluation results saved to {output_csv}")
 
-    return results_df["F1-Score"].mean()
 
 
 # Example usage
@@ -193,6 +188,3 @@ output_csv = f'evaluation_results_ae_threshold_{80}.csv'
 
 averages.append({80: main(parent_dir, output_csv, 80)})
 
-
-for average in averages:
-    print(average)

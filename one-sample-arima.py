@@ -129,8 +129,8 @@ def main_arma(parent_dir, output_csv, arma_order=(5,1,0)):
             idx = np.random.choice(train_scaled.shape[0], 1, replace=False)
             normal_eval = train_scaled[idx]
 
-            # 20 anomaly samples
-            df_anom = pd.read_csv(anomaly_path).sample(n=20, random_state=SEED).iloc[:, :-1]
+            # 1 anomaly samples
+            df_anom = pd.read_csv(anomaly_path).sample(n=1, random_state=SEED).iloc[:, :-1]
             anomaly_eval, _ = preprocess_data(df_anom, scaler)
 
             f1, prec, rec, tn, fp, fn, tp, thr, t_inf = evaluate_balanced_arma(
@@ -140,19 +140,15 @@ def main_arma(parent_dir, output_csv, arma_order=(5,1,0)):
             results.append({
                 "Train Dataset":   os.path.basename(train_path),
                 "Anomaly Dataset": os.path.basename(anomaly_path),
-                "Inference time":  t_inf,
                 "tn":              tn,
                 "tp":              tp,
                 "fn":              fn,
                 "fp":              fp,
-                "Precision":       prec,
-                "Recall":          rec,
-                "F1-Score":        f1,
-                "Threshold":       thr
             })
+    print(np.average(t_inf))
 
     pd.DataFrame(results).to_csv(output_csv, index=False)
     print(f"ARIMA-based evaluation results saved to {output_csv}")
 
 if __name__ == "__main__":
-    main_arma('custom_datasets', '20sample-arima_evaluation_results.csv', arma_order=(5,1,0))
+    main_arma('custom_datasets', '1sample-arima_evaluation_results.csv', arma_order=(5,1,0))
