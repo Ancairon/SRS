@@ -113,8 +113,9 @@ if __name__ == "__main__":
                 'TP': TP,
                 'FN': FN,
                 'FP': "0",
-                "inference": inference_time
             })
+
+    print(np.average(inference_time))
 
     results_df = pd.DataFrame(results)
     results_df.sort_values(by=['Train CSV', 'Test CSV'], inplace=True, ignore_index=True)

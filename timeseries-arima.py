@@ -7,8 +7,8 @@ from sklearn.preprocessing import StandardScaler
 
 PARENT_DIR = 'custom_datasets'
 RESULTS_CSV = 'arima_anomaly_eval_single_window.csv'
-SEQ_LEN = 10
-STEP = 10
+SEQ_LEN = 3
+STEP = 3
 THRESHOLD_PCT = 95
 SEED = 42
 
@@ -127,9 +127,9 @@ if __name__ == "__main__":
                 'TP': TP,
                 'FN': FN,
                 'FP': "0",
-                "inference": inference_time
             })
 
+    print(np.average(inference_time))
     results_df = pd.DataFrame(results)
     results_df.sort_values(by=['Train CSV', 'Test CSV'], inplace=True, ignore_index=True)
     results_df.to_csv(RESULTS_CSV, index=False)

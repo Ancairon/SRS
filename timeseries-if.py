@@ -8,8 +8,8 @@ from sklearn.metrics import precision_score, recall_score, f1_score, confusion_m
 
 PARENT_DIR = 'custom_datasets'
 RESULTS_CSV = 'rf_anomaly_eval_single_window.csv'
-SEQ_LEN = 10
-STEP = 10
+SEQ_LEN = 3
+STEP = 3
 SEED = 42
 
 np.random.seed(SEED)
@@ -111,9 +111,9 @@ if __name__ == "__main__":
                 'TP': TP,
                 'FN': FN,
                 'FP': "0",
-                "inference": inference_time
             })
 
+    print(np.average(inference_time))
     results_df = pd.DataFrame(results)
     results_df.sort_values(by=['Train CSV', 'Test CSV'],
                            inplace=True, ignore_index=True)
