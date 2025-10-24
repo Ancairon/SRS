@@ -1,0 +1,8 @@
+Class,Detection Rate,FPR,Distance Ratio,Conf Diff,Test Acc,Verdict
+object_detection,98.7%,19.6%,10.3x,+0.073,0.792,🟢 Excellent
+hand_landmarking,95.8%,18.4%,4.8x,+0.220,0.928,🟢 Excellent
+gesture_recognition,7.2%,9.0%,2.6x,+0.021,0.858,🔴 Poor
+pose_landmarking,69.7%,11.3%,3.7x,+0.057,0.856,🟠 Moderate
+face_detection,37.8%,12.5%,4.2x,+0.195,0.878,🔴 Poor
+audio_classification,100.0%,19.3%,5.1x,-0.011,0.785,🟢 Excellent
+face_landmarking,100.0%,16.6%,68.4x,+0.115,0.789,🟢 Excellent
