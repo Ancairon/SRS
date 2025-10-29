@@ -1,32 +1,75 @@
-from matplotlib.font_manager import json_dump
+import time
 import pandas as pd
 import requests
 import os
 
 
-def getDataFromAPI(whom, ip, chart, dimension, timeStepsBack=(60 * 60)*24*7):
-    points = timeStepsBack
+def getDataFromAPI(whom, ip, chart, dimension, points=60):
+    """
+    Fetches a time series from Netdata v3 API and saves a CSV with columns
+    [timestamp,value] (timestamps in milliseconds, ascending).
 
-    query = 'http://{}:19999/api/v2/data?chart={}&dimension={}&after=-{}&before={}&points={}&group=average&gtime=0&tier=0&format=json&options=seconds&options=jsonwrap'.format(ip, chart, dimension, timeStepsBack, 0, points)
-    print(query)
+    :param whom: prefix (dataset name)
+    :param ip: host (e.g. 'localhost')
+    :param chart: chart/context id (contexts parameter)
+    :param dimension: dimension name
+    :param points: number of points to request (default 60)
+    """
+    now = int(time.time())
 
-    r = requests.get(query, timeout=60*60)
+    url = (
+        f"http://{ip}:19999/api/v1/data?chart={chart}"
+        f"&dimension={dimension}&after=-{points}&before={now}&points={points}"
+        "&group=average&format=json&options=seconds,jsonwrap"
+    )
 
-    a = r.json()['result']['data']
+    print('[DEBUG] Fetching Netdata URL:', url)
+    print('[DEBUG] Request timestamp (before):', now, '=', time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime(now)))
 
-    a.reverse()
+    r = requests.get(url, timeout=60)
+    r.raise_for_status()
 
-    json_dump(a, "a.json")
+    data = r.json()
+    # Expect v3 format: { result: { labels: [...], data: [[timestamp, val], ...] } }
+    if not data or 'result' not in data or 'data' not in data['result']:
+        raise RuntimeError('Unexpected Netdata response format: no result.data')
 
-    pdObj = pd.read_json("a.json")
-    pdObj.to_csv("{0}.csv".format(whom + "_" + chart + "_" + dimension))
+    raw = data['result']['data']
 
-    os.remove("a.json")
+    # Build series of (timestamp_ms, value)
+    series = []
+    for row in raw:
+        if not isinstance(row, (list, tuple)) or len(row) < 2:
+            continue
+        try:
+            ts_s = int(row[0])
+            val = row[1]
+        except Exception:
+            continue
+        series.append({'timestamp': ts_s * 1000, 'value': val})
 
-name = "idle3_rpi"
-ip = "192.168.1.27"
+    if not series:
+        print(f"Warning: no data points returned for {chart} - {dimension}")
+        return
 
-# getDataFromAPI(name, ip, "system.cpu", "user")
+    # sort ascending by timestamp (older -> newer)
+    series.sort(key=lambda x: x['timestamp'])
+
+    df = pd.DataFrame(series)
+
+    # Save CSV with two columns so downstream combiner can pick the last column (value)
+    os.makedirs(f"custom_datasets/{whom}", exist_ok=True)
+    filename = f"custom_datasets/{whom}/{whom}_{chart}_{dimension}.csv"
+    df.to_csv(filename, index=False)
+
+    print(f"Saved {filename} ({len(df)} rows)")
+
+
+name = "nginx"
+# ip = "192.168.1.123"
+ip = "localhost"
+
+# fetch a handful of common charts/dimensions
 getDataFromAPI(name, ip, "system.cpu", "user")
 getDataFromAPI(name, ip, "system.ram", "free")
 getDataFromAPI(name, ip, "system.ram", "used")
